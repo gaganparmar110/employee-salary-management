@@ -4,7 +4,7 @@ import * as hrManagerRepo from "../repositories/hrManager.repository.js";
 import { hashPassword, verifyPassword } from "../lib/password.js";
 import { signHrManagerToken } from "../lib/jwt.js";
 import { loginSchema, type LoginInput } from "./auth.schemas.js";
-import { DomainError } from "./errors.js";
+import { AuthenticationError } from "./errors.js";
 import type { HrManager } from "../domain/index.js";
 
 export interface LoginResult {
@@ -18,7 +18,7 @@ export async function login(input: LoginInput, db: PrismaClient = prisma): Promi
   const record = await hrManagerRepo.findHrManagerByEmail(db, parsed.email);
   // Same message either way — don't reveal whether the email exists.
   if (!record || !(await verifyPassword(parsed.password, record.passwordHash))) {
-    throw new DomainError("Invalid email or password");
+    throw new AuthenticationError("Invalid email or password");
   }
 
   const token = signHrManagerToken({ sub: record.id, email: record.email });
