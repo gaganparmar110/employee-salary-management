@@ -11,6 +11,7 @@
     "test:watch": "vitest",
     "lint": "eslint .",
     "seed": "tsx scripts/seed.ts",
+    "create-hr-manager": "tsx scripts/create-hr-manager.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },

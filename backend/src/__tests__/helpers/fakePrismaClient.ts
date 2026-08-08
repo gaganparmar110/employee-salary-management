@@ -29,6 +29,13 @@ interface SalaryRecordRow {
   createdAt: Date;
 }
 
+interface HrManagerRow {
+  id: string;
+  email: string;
+  passwordHash: string;
+  createdAt: Date;
+}
+
 interface EmployeeWhere {
   department?: string;
   country?: string;
@@ -72,12 +79,17 @@ interface FakeDb {
     findMany(args: { where: { employeeId: string }; skip?: number; take?: number }): Promise<SalaryRecordRow[]>;
     findFirst(args: { where: { employeeId: string } }): Promise<SalaryRecordRow | null>;
   };
+  hrManager: {
+    create(args: { data: Omit<HrManagerRow, "id" | "createdAt"> }): Promise<HrManagerRow>;
+    findUnique(args: { where: { email: string } }): Promise<HrManagerRow | null>;
+  };
   $transaction<T>(callback: (tx: FakeDb) => Promise<T>): Promise<T>;
 }
 
 export function createFakePrismaClient(): PrismaClient {
   const employees: EmployeeRow[] = [];
   const salaryRecords: SalaryRecordRow[] = [];
+  const hrManagers: HrManagerRow[] = [];
 
   const client: FakeDb = {
     employee: {
@@ -128,6 +140,19 @@ export function createFakePrismaClient(): PrismaClient {
       async findFirst({ where }: { where: { employeeId: string } }) {
         const matched = sortSalaryRecords(salaryRecords.filter((r) => r.employeeId === where.employeeId));
         return matched[0] ?? null;
+      },
+    },
+    hrManager: {
+      async create({ data }: { data: Omit<HrManagerRow, "id" | "createdAt"> }) {
+        if (hrManagers.some((m) => m.email === data.email)) {
+          throw new Error(`Unique constraint failed on email: ${data.email}`);
+        }
+        const row: HrManagerRow = { ...data, id: randomUUID(), createdAt: new Date() };
+        hrManagers.push(row);
+        return row;
+      },
+      async findUnique({ where }: { where: { email: string } }) {
+        return hrManagers.find((m) => m.email === where.email) ?? null;
       },
     },
     async $transaction<T>(callback: (tx: FakeDb) => Promise<T>): Promise<T> {
