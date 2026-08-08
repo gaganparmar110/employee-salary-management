@@ -3,7 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import { createFakePrismaClient } from "./helpers/fakePrismaClient.js";
 import { createHrManager, login } from "../services/auth.service.js";
 import { verifyHrManagerToken } from "../lib/jwt.js";
-import { DomainError } from "../services/errors.js";
+import { AuthenticationError } from "../services/errors.js";
 
 describe("auth service", () => {
   let db: PrismaClient;
@@ -30,11 +30,15 @@ describe("auth service", () => {
   });
 
   it("rejects an unknown email", async () => {
-    await expect(login({ email: "nobody@acme.test", password: "whatever" }, db)).rejects.toThrow(DomainError);
+    await expect(login({ email: "nobody@acme.test", password: "whatever" }, db)).rejects.toThrow(
+      AuthenticationError,
+    );
   });
 
   it("rejects the wrong password", async () => {
     await createHrManager("hr@acme.test", "correct-horse", db);
-    await expect(login({ email: "hr@acme.test", password: "wrong-password" }, db)).rejects.toThrow(DomainError);
+    await expect(login({ email: "hr@acme.test", password: "wrong-password" }, db)).rejects.toThrow(
+      AuthenticationError,
+    );
   });
 });
