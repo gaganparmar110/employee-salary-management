@@ -63,3 +63,45 @@ export async function getCurrentSalary(db: Db, employeeId: string): Promise<Sala
   });
   return row ? toDomainSalaryRecord(row) : null;
 }
+
+export interface CurrentSalarySnapshot {
+  employeeId: string;
+  employeeCode: string;
+  fullName: string;
+  department: string;
+  country: string;
+  currency: string;
+  amount: string;
+}
+
+// One employee-scale query for reporting: `distinct` + a matching `orderBy`
+// compiles to a Postgres DISTINCT ON, giving exactly the latest
+// SalaryRecord per employee (as of `asOfDate`, or now if omitted) in a
+// single indexed pass — no N+1 queries across 10,000 employees. Reused for
+// both current-state reports and point-in-time ones (pay-over-time).
+export async function getSalariesSnapshot(db: Db, asOfDate?: Date): Promise<CurrentSalarySnapshot[]> {
+  const rows = await db.salaryRecord.findMany({
+    where: asOfDate ? { effectiveDate: { lte: asOfDate } } : undefined,
+    distinct: ["employeeId"],
+    orderBy: [{ employeeId: "asc" }, { effectiveDate: "desc" }, { createdAt: "desc" }],
+    include: { employee: { select: { employeeCode: true, fullName: true, department: true, country: true } } },
+  });
+
+  return rows.map((row) => ({
+    employeeId: row.employeeId,
+    employeeCode: row.employee.employeeCode,
+    fullName: row.employee.fullName,
+    department: row.employee.department,
+    country: row.employee.country,
+    currency: row.currency,
+    amount: row.amount.toString(),
+  }));
+}
+
+// Anchors the period range for pay-over-time — the earliest point any
+// salary history exists, so we don't generate empty years before the org
+// had any data.
+export async function getEarliestEffectiveDate(db: Db): Promise<Date | null> {
+  const result = await db.salaryRecord.aggregate({ _min: { effectiveDate: true } });
+  return result._min.effectiveDate;
+}

@@ -4,6 +4,7 @@ import cors from "cors";
 import { healthRouter } from "./routes/health.route.js";
 import { authRouter } from "./routes/auth.route.js";
 import { employeeRouter } from "./routes/employee.route.js";
+import { reportingRouter } from "./routes/reporting.route.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use("/api/v1/health", healthRouter);
 app.use("/api/v1/auth", authRouter);
 app.use("/api/v1/employees", employeeRouter);
+app.use("/api/v1/reports", reportingRouter);
 
 // Must be registered after all routes — Express recognizes error
 // middleware by its 4-argument signature.

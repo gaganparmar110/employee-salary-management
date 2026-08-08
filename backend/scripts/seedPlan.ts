@@ -121,13 +121,18 @@ function planEmployee(index: number, today: Date): SeedEmployeePlan {
     if (earliestNext < today) {
       const toProfile = faker.helpers.arrayElement(COUNTRIES.filter((c) => c.currency !== currentProfile.currency));
       const effectiveDate = faker.date.between({ from: earliestNext, to: today });
+      // Rescale by the new country's salaryScale — otherwise the old
+      // currency's nominal amount just gets relabeled, producing absurd
+      // figures (e.g. a JPY nominal salary relabeled as GBP).
+      const rescaledAmount = round2((currentAmount / currentProfile.salaryScale) * toProfile.salaryScale);
       history.push({
         effectiveDate,
-        amount: currentAmount,
+        amount: rescaledAmount,
         currency: toProfile.currency,
         payFrequency: toProfile.payFrequency,
         reason: "CURRENCY_CHANGE",
       });
+      currentAmount = rescaledAmount;
       currentProfile = toProfile;
     }
   }
