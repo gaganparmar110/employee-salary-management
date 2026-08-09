@@ -1,0 +1,25 @@
+databases:
+  - name: esm-postgres
+    plan: free
+    databaseName: employee_salary_db
+    user: esm_admin
+
+services:
+  - type: web
+    name: esm-backend
+    runtime: node
+    plan: free
+    branch: develop
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: esm-postgres
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
