@@ -10,9 +10,8 @@ services:
     runtime: node
     plan: free
     branch: develop
-    rootDir: backend
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
+    buildCommand: npm install --include=dev --workspace=backend && npm run build --workspace=backend
+    startCommand: npm run start --workspace=backend
     healthCheckPath: /api/v1/health
     envVars:
       - key: DATABASE_URL
