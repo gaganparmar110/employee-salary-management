@@ -19,6 +19,23 @@ import { Skeleton, TableSkeletonRows } from "../../../components/ui/Skeleton";
 
 const UPDATE_REASONS: Exclude<SalaryChangeReason, "HIRE">[] = ["RAISE", "ADJUSTMENT", "CURRENCY_CHANGE", "CORRECTION"];
 
+// Mirrors the backend's updateSalarySchema (zod) so obviously-bad input
+// never round-trips to the server just to bounce back as a 400.
+const CURRENCY_CODE_PATTERN = /^[A-Za-z]{3}$/;
+const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+type UpdateSalaryFieldErrors = Partial<Record<"amount" | "currency" | "effectiveDate", string>>;
+
+// Fixed-height reserved slot so a field's error appearing doesn't shift
+// the rest of the row out of alignment with its neighbors.
+function FieldError({ message }: { message?: string }) {
+  return (
+    <p role={message ? "alert" : undefined} className="mt-1 min-h-8 text-xs text-danger">
+      {message ?? ""}
+    </p>
+  );
+}
+
 export default function EmployeeDetailPage() {
   const params = useParams<{ id: string }>();
   const id = params.id as string;
@@ -40,6 +57,7 @@ export default function EmployeeDetailPage() {
   const [effectiveDate, setEffectiveDate] = useState("");
   const [reason, setReason] = useState<Exclude<SalaryChangeReason, "HIRE">>("RAISE");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<UpdateSalaryFieldErrors>({});
 
   const updateAction = useAsyncData(() =>
     updateSalary(token as string, id, {
@@ -62,9 +80,28 @@ export default function EmployeeDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [updateAction.data]);
 
+  function validateUpdateSalaryForm(): boolean {
+    const errors: UpdateSalaryFieldErrors = {};
+    const amountValue = Number(amount);
+    if (!amount || Number.isNaN(amountValue) || amountValue <= 0) {
+      errors.amount = "Enter an amount greater than 0.";
+    }
+    if (!CURRENCY_CODE_PATTERN.test(currency)) {
+      errors.currency = "Enter a 3-letter currency code, e.g. USD.";
+    }
+    if (!effectiveDate) {
+      errors.effectiveDate = "Select an effective date.";
+    } else if (!ISO_DATE_PATTERN.test(effectiveDate) || Number.isNaN(Date.parse(effectiveDate))) {
+      errors.effectiveDate = "Enter a valid date.";
+    }
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  }
+
   function handleUpdateSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setShowSuccess(false);
+    if (!validateUpdateSalaryForm()) return;
     updateAction.run();
   }
 
@@ -193,59 +230,78 @@ export default function EmployeeDetailPage() {
               <p className="mt-1 text-xs text-muted">
                 Appends a new salary record — the existing history is never overwritten.
               </p>
-              <form onSubmit={handleUpdateSubmit} className="mt-3 flex flex-wrap items-end gap-3">
-                <label className="text-sm text-muted">
-                  Amount
+              <form
+                onSubmit={handleUpdateSubmit}
+                noValidate
+                className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-6"
+              >
+                <div className="flex flex-col">
+                  <label htmlFor="update-salary-amount" className="text-sm text-muted">
+                    Amount
+                  </label>
                   <input
+                    id="update-salary-amount"
                     type="number"
                     min="0"
                     step="0.01"
-                    required
                     value={amount}
                     onChange={(event) => setAmount(event.target.value)}
-                    className="mt-1 block w-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   />
-                </label>
-                <label className="text-sm text-muted">
-                  Currency
+                  <FieldError message={fieldErrors.amount} />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="update-salary-currency" className="text-sm text-muted">
+                    Currency
+                  </label>
                   <input
+                    id="update-salary-currency"
                     type="text"
-                    required
                     maxLength={3}
                     value={currency}
                     onChange={(event) => setCurrency(event.target.value.toUpperCase())}
                     placeholder={employee.data.currency}
-                    className="mt-1 block w-20 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground uppercase"
+                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground uppercase"
                   />
-                </label>
-                <label className="text-sm text-muted">
-                  Pay frequency
+                  <FieldError message={fieldErrors.currency} />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="update-salary-pay-frequency" className="text-sm text-muted">
+                    Pay frequency
+                  </label>
                   <select
+                    id="update-salary-pay-frequency"
                     value={payFrequency}
                     onChange={(event) => setPayFrequency(event.target.value as PayFrequency)}
-                    className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   >
                     <option value="ANNUAL">ANNUAL</option>
                     <option value="MONTHLY">MONTHLY</option>
                   </select>
-                </label>
-                <label className="text-sm text-muted">
-                  Effective date
+                  <FieldError />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="update-salary-effective-date" className="text-sm text-muted">
+                    Effective date
+                  </label>
                   <input
-                    type="text"
-                    required
-                    placeholder="YYYY-MM-DD"
+                    id="update-salary-effective-date"
+                    type="date"
                     value={effectiveDate}
                     onChange={(event) => setEffectiveDate(event.target.value)}
-                    className="mt-1 block w-32 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   />
-                </label>
-                <label className="text-sm text-muted">
-                  Reason
+                  <FieldError message={fieldErrors.effectiveDate} />
+                </div>
+                <div className="flex flex-col">
+                  <label htmlFor="update-salary-reason" className="text-sm text-muted">
+                    Reason
+                  </label>
                   <select
+                    id="update-salary-reason"
                     value={reason}
                     onChange={(event) => setReason(event.target.value as Exclude<SalaryChangeReason, "HIRE">)}
-                    className="mt-1 block rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                    className="mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
                   >
                     {UPDATE_REASONS.map((r) => (
                       <option key={r} value={r}>
@@ -253,14 +309,18 @@ export default function EmployeeDetailPage() {
                       </option>
                     ))}
                   </select>
-                </label>
-                <button
-                  type="submit"
-                  disabled={updateAction.loading}
-                  className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
-                >
-                  {updateAction.loading ? "Saving…" : "Update salary"}
-                </button>
+                  <FieldError />
+                </div>
+                <div className="flex flex-col justify-start">
+                  <span className="text-sm text-muted">&nbsp;</span>
+                  <button
+                    type="submit"
+                    disabled={updateAction.loading}
+                    className="mt-1 rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-hover disabled:opacity-50"
+                  >
+                    {updateAction.loading ? "Saving…" : "Update salary"}
+                  </button>
+                </div>
               </form>
               {updateAction.error && (
                 <p role="alert" className="mt-2 text-sm text-danger">

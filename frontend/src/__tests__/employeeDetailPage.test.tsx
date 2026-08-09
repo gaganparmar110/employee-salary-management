@@ -122,4 +122,51 @@ describe("EmployeeDetailPage", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/failed to load/i);
   });
+
+  it("shows a validation error and does not submit when amount is not positive", async () => {
+    const user = userEvent.setup();
+    render(<EmployeeDetailPage />);
+    await waitFor(() => expect(getEmployeeMock).toHaveBeenCalledTimes(1));
+
+    await user.clear(screen.getByLabelText(/^amount$/i));
+    await user.type(screen.getByLabelText(/^amount$/i), "0");
+    await user.clear(screen.getByLabelText(/^currency$/i));
+    await user.type(screen.getByLabelText(/^currency$/i), "GBP");
+    await user.type(screen.getByLabelText(/effective date/i), "2025-01-01");
+    await user.click(screen.getByRole("button", { name: /update salary/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/amount/i);
+    expect(updateSalaryMock).not.toHaveBeenCalled();
+  });
+
+  it("shows a validation error and does not submit when currency is not a 3-letter code", async () => {
+    const user = userEvent.setup();
+    render(<EmployeeDetailPage />);
+    await waitFor(() => expect(getEmployeeMock).toHaveBeenCalledTimes(1));
+
+    await user.clear(screen.getByLabelText(/^amount$/i));
+    await user.type(screen.getByLabelText(/^amount$/i), "95000");
+    await user.clear(screen.getByLabelText(/^currency$/i));
+    await user.type(screen.getByLabelText(/^currency$/i), "G1");
+    await user.type(screen.getByLabelText(/effective date/i), "2025-01-01");
+    await user.click(screen.getByRole("button", { name: /update salary/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/currency/i);
+    expect(updateSalaryMock).not.toHaveBeenCalled();
+  });
+
+  it("shows a validation error and does not submit when no effective date is selected", async () => {
+    const user = userEvent.setup();
+    render(<EmployeeDetailPage />);
+    await waitFor(() => expect(getEmployeeMock).toHaveBeenCalledTimes(1));
+
+    await user.clear(screen.getByLabelText(/^amount$/i));
+    await user.type(screen.getByLabelText(/^amount$/i), "95000");
+    await user.clear(screen.getByLabelText(/^currency$/i));
+    await user.type(screen.getByLabelText(/^currency$/i), "GBP");
+    await user.click(screen.getByRole("button", { name: /update salary/i }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(/date/i);
+    expect(updateSalaryMock).not.toHaveBeenCalled();
+  });
 });

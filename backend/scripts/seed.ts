@@ -18,7 +18,10 @@ import { generateSeedPlans, type SeedEmployeePlan } from "./seedPlan.js";
 
 const EMPLOYEE_COUNT = Number(process.env.SEED_COUNT ?? 10000);
 const SEED = 42;
-const BATCH_SIZE = 20;
+// Overridable for higher-latency connections (e.g. seeding a remote DB) —
+// 20 concurrent transactions is fine over localhost but starves Prisma's
+// default 2s transaction-acquire timeout over a real network round trip.
+const BATCH_SIZE = Number(process.env.SEED_BATCH_SIZE ?? 20);
 const SEED_HR_MANAGER_EMAIL = "seed-admin@acme.test";
 const SEED_HR_MANAGER_PASSWORD = "seed-admin-password"; // dev-only bootstrap account
 

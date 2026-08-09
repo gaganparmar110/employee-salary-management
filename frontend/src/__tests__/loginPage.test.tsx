@@ -26,7 +26,21 @@ describe("LoginPage", () => {
   it("renders email and password fields", () => {
     render(<LoginPage />);
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
+  });
+
+  it("toggles the password field between hidden and visible", async () => {
+    const user = userEvent.setup();
+    render(<LoginPage />);
+
+    const passwordInput = screen.getByLabelText(/^password$/i);
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: /show password/i }));
+    expect(passwordInput).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /hide password/i }));
+    expect(passwordInput).toHaveAttribute("type", "password");
   });
 
   it("logs in and redirects on success", async () => {
@@ -35,7 +49,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "hr@acme.test");
-    await user.type(screen.getByLabelText(/password/i), "correct-horse");
+    await user.type(screen.getByLabelText(/^password$/i), "correct-horse");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(loginMock).toHaveBeenCalledWith("hr@acme.test", "correct-horse");
@@ -49,7 +63,7 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     await user.type(screen.getByLabelText(/email/i), "hr@acme.test");
-    await user.type(screen.getByLabelText(/password/i), "wrong");
+    await user.type(screen.getByLabelText(/^password$/i), "wrong");
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Invalid email or password");

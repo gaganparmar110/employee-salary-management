@@ -11,6 +11,12 @@ import {
 import { DomainError, NotFoundError } from "./errors.js";
 import type { Employee, EmployeeWithCurrentSalary, SalaryRecord } from "../domain/index.js";
 
+// Prisma's $transaction defaults (maxWait: 2s to acquire a connection,
+// timeout: 5s to finish) are tight for anything but a low-latency local
+// DB — comfortable margin for real-world network variance without being
+// so long a stuck transaction could pile up under load.
+const TRANSACTION_OPTIONS = { maxWait: 10_000, timeout: 20_000 };
+
 export interface CreateEmployeeResult {
   employee: Employee;
   salaryRecord: SalaryRecord;
@@ -46,7 +52,7 @@ export async function createEmployee(
     });
 
     return { employee, salaryRecord };
-  });
+  }, TRANSACTION_OPTIONS);
 }
 
 export interface UpdateSalaryResult {
@@ -99,7 +105,7 @@ export async function updateSalary(
     }
 
     return record;
-  });
+  }, TRANSACTION_OPTIONS);
 
   return { current, previous };
 }

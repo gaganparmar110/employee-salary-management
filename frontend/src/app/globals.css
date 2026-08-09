@@ -29,3 +29,17 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Tailwind's preflight resets buttons to cursor: default, unlike native
+   <button>/<a> browser behavior — restore the pointer everywhere, one
+   place, instead of a `cursor-pointer` class on every button/link. */
+a,
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}
+
+button:disabled,
+[role="button"][aria-disabled="true"] {
+  cursor: not-allowed;
+}
