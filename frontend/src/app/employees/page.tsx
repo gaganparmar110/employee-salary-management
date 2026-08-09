@@ -6,8 +6,11 @@ import { useAuthStore } from "../../store/authStore";
 import { listEmployees } from "../../lib/employeesApi";
 import { useAsyncData } from "../../lib/useAsyncData";
 import { scrollClassIfLong } from "../../lib/scroll";
+import { AppShell } from "../../components/layout/AppShell";
+import { TableSkeletonRows } from "../../components/ui/Skeleton";
 
 const PAGE_SIZE = 20;
+const COLUMN_COUNT = 5;
 
 // Unlike the Reports page, this loads automatically — browsing/searching
 // employees is this page's whole purpose, not an optional question.
@@ -38,25 +41,23 @@ export default function EmployeesPage() {
   }
 
   const totalPages = list.data ? Math.max(1, Math.ceil(list.data.total / PAGE_SIZE)) : 1;
+  const initialLoading = list.loading && !list.data;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-semibold text-foreground">Employee Salary Management</span>
-          <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
-            ← Back to dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl space-y-6 px-6 py-10">
-        <div>
+    <AppShell
+      headerRight={
+        <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
+          ← Back to dashboard
+        </Link>
+      }
+    >
+      <div className="flex h-full flex-col">
+        <div className="shrink-0">
           <h1 className="text-2xl font-semibold text-foreground">Employees</h1>
           <p className="mt-1 text-sm text-muted">Search and browse employee records.</p>
         </div>
 
-        <div className="flex flex-wrap items-end gap-3">
+        <div className="mt-6 flex shrink-0 flex-wrap items-end gap-3">
           <label className="text-sm text-muted">
             Name or employee code
             <input
@@ -98,72 +99,84 @@ export default function EmployeesPage() {
         </div>
 
         {list.error && (
-          <p role="alert" className="text-sm text-danger">
+          <p role="alert" className="mt-4 shrink-0 text-sm text-danger">
             {list.error}
           </p>
         )}
 
-        {list.loading && !list.data && <p className="text-sm text-muted">Loading employees…</p>}
-
-        {list.data && (
+        {(list.data || initialLoading) && (
           <>
-            {list.data.items.length === 0 ? (
-              <p className="text-sm text-muted">No employees found.</p>
+            {list.data && list.data.items.length === 0 ? (
+              <p className="mt-4 text-sm text-muted">No employees found.</p>
             ) : (
-              <div className="rounded-xl border border-border bg-surface p-4">
-                <div className={scrollClassIfLong(list.data.items.length)}>
+              <div className="mt-4 min-h-0 flex-1 overflow-hidden rounded-xl border border-border bg-surface p-4">
+                <div className={`h-full ${scrollClassIfLong(list.data?.items.length ?? PAGE_SIZE) ?? "overflow-y-auto"}`}>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border text-left text-muted">
-                        <th className="py-2 pr-4 font-medium">Code</th>
-                        <th className="py-2 pr-4 font-medium">Name</th>
-                        <th className="py-2 pr-4 font-medium">Department</th>
-                        <th className="py-2 pr-4 font-medium">Country</th>
-                        <th className="py-2 font-medium">Currency</th>
+                      <tr className="border-b border-border bg-surface text-left text-muted">
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Code</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Name</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Department</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Country</th>
+                        <th className="sticky top-0 bg-surface py-2 font-medium">Currency</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {list.data.items.map((employee) => (
-                        <tr key={employee.id} className="border-b border-border/50 text-foreground">
-                          <td className="py-2 pr-4">{employee.employeeCode}</td>
-                          <td className="py-2 pr-4">{employee.fullName}</td>
-                          <td className="py-2 pr-4">{employee.department}</td>
-                          <td className="py-2 pr-4">{employee.country}</td>
-                          <td className="py-2">{employee.currency}</td>
-                        </tr>
-                      ))}
+                      {initialLoading ? (
+                        <TableSkeletonRows rows={8} columns={COLUMN_COUNT} />
+                      ) : (
+                        list.data!.items.map((employee) => (
+                          <tr key={employee.id} className="border-b border-border/50 text-foreground">
+                            <td className="py-2 pr-4">
+                              <Link href={`/employees/${employee.id}`} className="hover:text-accent hover:underline">
+                                {employee.employeeCode}
+                              </Link>
+                            </td>
+                            <td className="py-2 pr-4">
+                              <Link href={`/employees/${employee.id}`} className="hover:text-accent hover:underline">
+                                {employee.fullName}
+                              </Link>
+                            </td>
+                            <td className="py-2 pr-4">{employee.department}</td>
+                            <td className="py-2 pr-4">{employee.country}</td>
+                            <td className="py-2">{employee.currency}</td>
+                          </tr>
+                        ))
+                      )}
                     </tbody>
                   </table>
                 </div>
               </div>
             )}
-
-            <div className="flex items-center justify-between text-sm text-muted">
-              <span>
-                {list.data.total} employee{list.data.total === 1 ? "" : "s"} · page {list.data.page} of {totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.max(1, current - 1))}
-                  disabled={page <= 1}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-50"
-                >
-                  Previous
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
-                  disabled={page >= totalPages}
-                  className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-50"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
           </>
         )}
-      </main>
-    </div>
+
+        {list.data && (
+          <div className="mt-4 flex shrink-0 items-center justify-between text-sm text-muted">
+            <span>
+              {list.data.total} employee{list.data.total === 1 ? "" : "s"} · page {list.data.page} of {totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page <= 1}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.min(totalPages, current + 1))}
+                disabled={page >= totalPages}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-foreground disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </AppShell>
   );
 }

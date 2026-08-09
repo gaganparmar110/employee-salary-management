@@ -17,6 +17,8 @@ import { formatMoney } from "../../lib/format";
 import { SummaryTable } from "../../components/reports/SummaryTable";
 import { useAsyncData } from "../../lib/useAsyncData";
 import { scrollClassIfLong } from "../../lib/scroll";
+import { AppShell } from "../../components/layout/AppShell";
+import { Skeleton, TableSkeletonRows } from "../../components/ui/Skeleton";
 
 export default function ReportsPage() {
   const token = useAuthStore((state) => state.token);
@@ -63,17 +65,14 @@ export default function ReportsPage() {
   const payOverTimeRowCount = payOverTime.data?.reduce((sum, period) => sum + period.summary.length, 0) ?? 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-          <span className="text-lg font-semibold text-foreground">Employee Salary Management</span>
-          <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
-            ← Back to dashboard
-          </Link>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-5xl space-y-10 px-6 py-10">
+    <AppShell
+      headerRight={
+        <Link href="/dashboard" className="text-sm text-muted hover:text-foreground">
+          ← Back to dashboard
+        </Link>
+      }
+    >
+      <div className="space-y-10">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Reports</h1>
           <p className="mt-1 text-sm text-muted">Click a question to fetch its answer.</p>
@@ -96,6 +95,17 @@ export default function ReportsPage() {
             <p role="alert" className="mt-2 text-sm text-danger">
               {overview.error}
             </p>
+          )}
+          {overview.loading && !overview.data && (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-surface p-4">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="mt-2 h-6 w-24" />
+                  <Skeleton className="mt-2 h-3 w-32" />
+                </div>
+              ))}
+            </div>
           )}
           {overview.data && (
             <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -133,6 +143,15 @@ export default function ReportsPage() {
               {byDepartment.error}
             </p>
           )}
+          {byDepartment.loading && !byDepartment.data && (
+            <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+              <table className="w-full text-sm">
+                <tbody>
+                  <TableSkeletonRows rows={5} columns={6} />
+                </tbody>
+              </table>
+            </div>
+          )}
           {byDepartment.data && (
             <div className="mt-3 rounded-xl border border-border bg-surface p-4">
               <SummaryTable
@@ -160,6 +179,15 @@ export default function ReportsPage() {
             <p role="alert" className="mt-2 text-sm text-danger">
               {byCountry.error}
             </p>
+          )}
+          {byCountry.loading && !byCountry.data && (
+            <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+              <table className="w-full text-sm">
+                <tbody>
+                  <TableSkeletonRows rows={5} columns={6} />
+                </tbody>
+              </table>
+            </div>
           )}
           {byCountry.data && (
             <div className="mt-3 rounded-xl border border-border bg-surface p-4">
@@ -209,6 +237,15 @@ export default function ReportsPage() {
               {deptCountry.error}
             </p>
           )}
+          {deptCountry.loading && !deptCountry.data && (
+            <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+              <table className="w-full text-sm">
+                <tbody>
+                  <TableSkeletonRows rows={3} columns={6} />
+                </tbody>
+              </table>
+            </div>
+          )}
           {deptCountry.data && (
             <div className="mt-3 rounded-xl border border-border bg-surface p-4">
               {deptCountry.data.length === 0 ? (
@@ -217,13 +254,13 @@ export default function ReportsPage() {
                 <div className={scrollClassIfLong(deptCountry.data.length)}>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border text-left text-muted">
-                        <th className="py-2 pr-4 font-medium">Department</th>
-                        <th className="py-2 pr-4 font-medium">Country</th>
-                        <th className="py-2 pr-4 font-medium">Currency</th>
-                        <th className="py-2 pr-4 font-medium">Headcount</th>
-                        <th className="py-2 pr-4 font-medium">Average</th>
-                        <th className="py-2 font-medium">Median</th>
+                      <tr className="border-b border-border bg-surface text-left text-muted">
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Department</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Country</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Currency</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Headcount</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Average</th>
+                        <th className="sticky top-0 bg-surface py-2 font-medium">Median</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -276,6 +313,18 @@ export default function ReportsPage() {
               {earners.error}
             </p>
           )}
+          {earners.loading && !earners.data && (
+            <div className="mt-3 grid gap-4 sm:grid-cols-2">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-surface p-4">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="mt-3 h-3 w-20" />
+                  <Skeleton className="mt-2 h-4 w-full" />
+                  <Skeleton className="mt-1 h-4 w-full" />
+                </div>
+              ))}
+            </div>
+          )}
           {earners.data && (
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               {earners.data.map((report) => (
@@ -322,6 +371,17 @@ export default function ReportsPage() {
             <p role="alert" className="mt-2 text-sm text-danger">
               {distribution.error}
             </p>
+          )}
+          {distribution.loading && !distribution.data && (
+            <div className="mt-3 space-y-4">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-border bg-surface p-4">
+                  <Skeleton className="h-3 w-12" />
+                  <Skeleton className="mt-3 h-3 w-full" />
+                  <Skeleton className="mt-1 h-3 w-full" />
+                </div>
+              ))}
+            </div>
           )}
           {distribution.data && (
             <div className="mt-3 space-y-4">
@@ -392,6 +452,15 @@ export default function ReportsPage() {
               {payOverTime.error}
             </p>
           )}
+          {payOverTime.loading && !payOverTime.data && (
+            <div className="mt-3 rounded-xl border border-border bg-surface p-4">
+              <table className="w-full text-sm">
+                <tbody>
+                  <TableSkeletonRows rows={5} columns={4} />
+                </tbody>
+              </table>
+            </div>
+          )}
           {payOverTime.data && (
             <div className="mt-3 rounded-xl border border-border bg-surface p-4">
               {payOverTime.data.length === 0 ? (
@@ -400,11 +469,11 @@ export default function ReportsPage() {
                 <div className={scrollClassIfLong(payOverTimeRowCount)}>
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="border-b border-border text-left text-muted">
-                        <th className="py-2 pr-4 font-medium">Period</th>
-                        <th className="py-2 pr-4 font-medium">Currency</th>
-                        <th className="py-2 pr-4 font-medium">Headcount</th>
-                        <th className="py-2 font-medium">Total cost</th>
+                      <tr className="border-b border-border bg-surface text-left text-muted">
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Period</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Currency</th>
+                        <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Headcount</th>
+                        <th className="sticky top-0 bg-surface py-2 font-medium">Total cost</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -428,7 +497,7 @@ export default function ReportsPage() {
             </div>
           )}
         </section>
-      </main>
-    </div>
+      </div>
+    </AppShell>
   );
 }

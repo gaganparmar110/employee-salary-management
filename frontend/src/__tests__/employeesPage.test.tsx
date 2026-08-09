@@ -115,4 +115,27 @@ describe("EmployeesPage", () => {
     render(<EmployeesPage />);
     expect(await screen.findByRole("alert")).toHaveTextContent(/failed to load/i);
   });
+
+  it("shows skeleton rows while the initial page is loading", async () => {
+    let resolveFetch: (value: unknown) => void = () => {};
+    listEmployeesMock.mockReset().mockReturnValue(
+      new Promise((resolve) => {
+        resolveFetch = resolve;
+      }),
+    );
+
+    render(<EmployeesPage />);
+
+    expect(screen.getAllByRole("row").length).toBeGreaterThan(1);
+    expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
+
+    resolveFetch({ items: [makeEmployee()], total: 1, page: 1, pageSize: 20 });
+    expect(await screen.findByText("Ada Lovelace")).toBeInTheDocument();
+  });
+
+  it("links each employee row to their detail page", async () => {
+    render(<EmployeesPage />);
+    const link = await screen.findByRole("link", { name: "Ada Lovelace" });
+    expect(link).toHaveAttribute("href", "/employees/e1");
+  });
 });

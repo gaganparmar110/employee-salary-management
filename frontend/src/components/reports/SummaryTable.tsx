@@ -18,13 +18,13 @@ export function SummaryTable({ groupLabel, rows }: SummaryTableProps) {
     <div data-testid="summary-table-scroll" className={scrollClassIfLong(rows.length)}>
       <table className="w-full text-sm">
         <thead>
-          <tr className="border-b border-border text-left text-muted">
-            <th className="py-2 pr-4 font-medium">{groupLabel}</th>
-            <th className="py-2 pr-4 font-medium">Currency</th>
-            <th className="py-2 pr-4 font-medium">Headcount</th>
-            <th className="py-2 pr-4 font-medium">Total cost</th>
-            <th className="py-2 pr-4 font-medium">Average</th>
-            <th className="py-2 font-medium">Median</th>
+          <tr className="border-b border-border bg-surface text-left text-muted">
+            <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">{groupLabel}</th>
+            <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Currency</th>
+            <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Headcount</th>
+            <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Total cost</th>
+            <th className="sticky top-0 bg-surface py-2 pr-4 font-medium">Average</th>
+            <th className="sticky top-0 bg-surface py-2 font-medium">Median</th>
           </tr>
         </thead>
         <tbody>

@@ -42,3 +42,47 @@ export function listEmployees(token: string, filter: ListEmployeesFilter = {}): 
     },
   });
 }
+
+export type PayFrequency = "ANNUAL" | "MONTHLY";
+export type SalaryChangeReason = "HIRE" | "RAISE" | "ADJUSTMENT" | "CURRENCY_CHANGE" | "CORRECTION";
+
+export interface SalaryRecord {
+  id: string;
+  employeeId: string;
+  amount: string;
+  currency: string;
+  payFrequency: PayFrequency;
+  effectiveDate: string;
+  reason: SalaryChangeReason;
+  changedById: string;
+  createdAt: string;
+}
+
+export interface EmployeeWithCurrentSalary extends Employee {
+  currentSalary: SalaryRecord | null;
+}
+
+export function getEmployee(token: string, id: string): Promise<EmployeeWithCurrentSalary> {
+  return apiRequest(`/api/v1/employees/${id}`, { token });
+}
+
+export function getSalaryHistory(token: string, id: string): Promise<SalaryRecord[]> {
+  return apiRequest(`/api/v1/employees/${id}/salary-history`, { token });
+}
+
+export interface UpdateSalaryInput {
+  amount: number;
+  currency: string;
+  payFrequency: PayFrequency;
+  effectiveDate: string;
+  reason: Exclude<SalaryChangeReason, "HIRE">;
+}
+
+export interface UpdateSalaryResult {
+  current: SalaryRecord;
+  previous: SalaryRecord | null;
+}
+
+export function updateSalary(token: string, id: string, input: UpdateSalaryInput): Promise<UpdateSalaryResult> {
+  return apiRequest(`/api/v1/employees/${id}/salary`, { token, method: "POST", body: input });
+}
