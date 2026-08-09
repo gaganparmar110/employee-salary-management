@@ -1,0 +1,70 @@
+// Data model for the Employee Salary Management System.
+// Salary changes are append-only (see SalaryRecord) so history is never
+// overwritten and doubles as the audit trail. See docs/ARCHITECTURE.md.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model HrManager {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  salaryRecords SalaryRecord[] @relation("ChangedBy")
+
+  @@map("hr_managers")
+}
+
+model Employee {
+  id           String   @id @default(uuid())
+  employeeCode String   @unique
+  fullName     String
+  department   String
+  country      String
+  currency     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  salaryRecords SalaryRecord[]
+
+  @@index([department])
+  @@index([country])
+  @@map("employees")
+}
+
+enum SalaryChangeReason {
+  HIRE
+  RAISE
+  ADJUSTMENT
+  CURRENCY_CHANGE
+  CORRECTION
+}
+
+enum PayFrequency {
+  ANNUAL
+  MONTHLY
+}
+
+model SalaryRecord {
+  id            String             @id @default(uuid())
+  employeeId    String
+  employee      Employee           @relation(fields: [employeeId], references: [id])
+  amount        Decimal            @db.Decimal(14, 2)
+  currency      String
+  payFrequency  PayFrequency
+  effectiveDate DateTime
+  reason        SalaryChangeReason
+  changedById   String
+  changedBy     HrManager          @relation("ChangedBy", fields: [changedById], references: [id])
+  createdAt     DateTime           @default(now())
+
+  @@index([employeeId, effectiveDate])
+  @@map("salary_records")
+}

@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+.next/
+out/
+build/
+
+# Prisma
+backend/prisma/migrations/dev.db
+
+# Logs
+npm-debug.log*
+*.log
+
+# Editor/OS
+.DS_Store
