@@ -4,9 +4,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../store/authStore";
 
-// Landing page after login — Phase B/C replace the two placeholder
-// sections below with the real Reports and Employees pages. Route
-// protection lives in middleware.ts now, not a client-side layout guard.
+// Landing page after login — links out to Reports and Employees. Route
+// protection lives in proxy.ts now, not a client-side layout guard.
 export default function DashboardPage() {
   const router = useRouter();
   const hrManager = useAuthStore((state) => state.hrManager);
@@ -44,12 +43,13 @@ export default function DashboardPage() {
         </p>
 
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h2 className="text-sm font-medium text-foreground">Employees</h2>
-            <p className="mt-1 text-sm text-muted">
-              Search, create, and update salary records. Coming soon.
-            </p>
-          </section>
+          <Link
+            href="/employees"
+            className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-accent"
+          >
+            <h2 className="text-sm font-medium text-foreground">Employees →</h2>
+            <p className="mt-1 text-sm text-muted">Search and browse employee records.</p>
+          </Link>
           <Link
             href="/reports"
             className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-accent"

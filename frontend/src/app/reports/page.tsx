@@ -16,14 +16,7 @@ import {
 import { formatMoney } from "../../lib/format";
 import { SummaryTable } from "../../components/reports/SummaryTable";
 import { useAsyncData } from "../../lib/useAsyncData";
-
-const SCROLL_THRESHOLD = 10;
-
-// Any table/list past this many rows gets wrapped so the page doesn't grow
-// unbounded — it scrolls within itself instead.
-function scrollClass(rowCount: number): string | undefined {
-  return rowCount > SCROLL_THRESHOLD ? "max-h-96 overflow-y-auto" : undefined;
-}
+import { scrollClassIfLong } from "../../lib/scroll";
 
 export default function ReportsPage() {
   const token = useAuthStore((state) => state.token);
@@ -221,7 +214,7 @@ export default function ReportsPage() {
               {deptCountry.data.length === 0 ? (
                 <p className="text-sm text-muted">No matching data.</p>
               ) : (
-                <div className={scrollClass(deptCountry.data.length)}>
+                <div className={scrollClassIfLong(deptCountry.data.length)}>
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border text-left text-muted">
@@ -404,7 +397,7 @@ export default function ReportsPage() {
               {payOverTime.data.length === 0 ? (
                 <p className="text-sm text-muted">No history yet.</p>
               ) : (
-                <div className={scrollClass(payOverTimeRowCount)}>
+                <div className={scrollClassIfLong(payOverTimeRowCount)}>
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border text-left text-muted">
