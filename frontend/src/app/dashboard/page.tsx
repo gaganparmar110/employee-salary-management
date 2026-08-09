@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "../../store/authStore";
 
@@ -49,12 +50,15 @@ export default function DashboardPage() {
               Search, create, and update salary records. Coming soon.
             </p>
           </section>
-          <section className="rounded-xl border border-border bg-surface p-5">
-            <h2 className="text-sm font-medium text-foreground">Reports</h2>
+          <Link
+            href="/reports"
+            className="rounded-xl border border-border bg-surface p-5 transition-colors hover:border-accent"
+          >
+            <h2 className="text-sm font-medium text-foreground">Reports →</h2>
             <p className="mt-1 text-sm text-muted">
-              Headcount cost, top earners, pay-over-time, and more. Coming soon.
+              Headcount cost, top earners, pay-over-time, and more.
             </p>
-          </section>
+          </Link>
         </div>
       </main>
     </div>
